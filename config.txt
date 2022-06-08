@@ -1,0 +1,65 @@
+bufferValue		=12345;		//test dla odczytu pierwszej wartosci (12345), dla przeczyszczenia buforu; UWAGA: ponizsze komentarze moga miec MAX 800 znakow
+N			=256;		//obslugiwane: cbrt(N/4)==floor(cbrt(N/4)), czyli: N=liniowyMod^3*4 10976[4x14^3]-jeszcze działa, 13500[4x15^3]-NIE działa (cbrt jest zbyt niedokładny), 16384[4x16^3]-znowu działa
+gaps			=0;		//liczba luk w ukladzie (dziur-defektow), rozmieszczonych losowo przy inicie (nie zbyt blisko)
+initMode		=0;		//struktury: 0-random (dla struktury HD należy zadać deltaDiameter=0.000E+00)
+deltaDiameter		=1.000E-04;	//diameter=\sigma(=1)\pm deltaDiameter [.3]; przy (initMode=0 && beta>0): odchylenie standardowe \delta rozkladu Gaussa [wartosc srednia \my=sigma(=1)]
+alpha			=0;		//0-d_b=sigma+delta, d_w=sigma-delta; 1-d_b=sigma, d_w=sigma-delta; ma znaczenie gdy !(initMode=0 && beta>0)
+beta			=1;		//ma wpływ tylko na initMode=0: 0-losowy rozklad dysków black/white w stosunku 50% (uklad binarny), 1-srednice dyskow zadane rozkladem Gaussa o wartosci sredniej \my=\sigma(=1) i odchyleniu standardowym \delta=deltaDiameter, 2-rozklad cosinusowy
+pressureOfNotFluid	=1.5;		//cisnienie/pacFrac, ponizej/powyzej ktorego ksztalt pudla nie fluktuuje (ok. p=1.24 dla d/\sigma=1 i multimerN=6) - ponizej/powyzej niego nie mozna wyznaczyc modulow sprezystosci (p/pacFrac - TWARDO w kodzie)
+growing			=1;		//0-rozprezanie, 1-sprezanie
+loadedConfiguration	=0;		//0-nowe badanie, 1-wczytaj konfiguracje
+loadedArg		=5.0000E+02;	//gdy loadedConfiguration=1, wskaze na plik konfiguracyjny, ktory zostanie wczytany
+loadedJOBID		=none;		//gdy loadedConfiguration=1, wskaze JOBID pliku konfiguracji, okreslonej przez loadedArg
+loadedSetStartGenerator	=0;		//0-ustaw pozycje startowa generatora na aktualny czas procesora, 1-ustaw pozycje startowa generatora na wskazanie pliku LOAD
+loadedSetGenerator	=0;		//0-nie ustawiaj generatora na pozycje wskazywana przez plik LOAD, 1-ustaw generator na pozycje wskazywana przez plik LOAD
+iterationsNumber	=1;		//0-wiecej iteracji, x(>0)-x iteracji (UWAGA: skipFirstIteration=1 pomija pierwsza)
+intervalSampling	=5;		//liczba cykli, co ktora sprawdzane sa akceptacje (w trakcie rownowagowania -> sa dostosowywane, po rownowagowaniu -> dzialaja metody zapisujace wyniki)
+intervalOutput		=100000;	//liczba cykli, co ktora wypisywany jest aktualny stan ukladu oraz robiony checkpoint jego konfiguracji - wielokrotnosc intervalSampling
+saveConfigurations	=0;		//0-nie zapisuj.., 1-zapisuj konfiguracje przejsciowe i przeprowadzaj TransientAnalysis (aktualnie: uzyskiwanie wartosci avAbsDPhi)
+savedConfigurationsInt	=1000;		//gdy saveConfigurations==1: liczba cykli, co ktora zapisywane sa konfiguracje przejsciowe - wielokrotnosc intervalSampling
+neighUpdatingFrequency	=1000000;		//liczba cykli, co ktora updatowana jest lista sasiadow - wielokrotnosc intervalSampling
+skipFirstIteration	=0;		//0-zacznij badanie od pierwszego punktu pomiarowego, 1-zacznij badanie od drugiego punktu pomiarowego
+useSpecificDirectory	=0;		//0-stworz nowy folder (kolejny), x(>0)-uzyj (stworz) folder o numerze x
+cyclesOfEquilibration	=0;	//cykle na rozruch
+cyclesOfMeasurement	=0;	//cykle na pomiar (po rozruchu)
+intervalResults		=1000;		//liczba cykli, co ktora zapisywane sa mierzone wielkosci - wielokrotnosc intervalSampling
+maxDeltaR		=0.15;		//najwieksza wartosc ruchu probnego czastki (w jednostkach sigma)
+desiredAcceptanceRatioR	=0.3;		//wartosc akceptacji ruchow probnych czastek
+desiredAcceptanceRatioV	=0.2;		//wartosc akceptacji ruchow probnych pudla
+useFileToIterate	=1;		//0-stosuj PONIZSZE ustawienia, 1-korzystaj z pliku 'startArguments.txt' do iterowania (plik ustawiony DOMYSLNIE na growing=1, max 1000 iteracji; UWAGA-kolumny: pierwsza:pacFrac[dowolna], druga:pressure[%.4E], trzecia:BRAK lub 1 (punkt bedzie tylko rownowagowany BEZ etapu pomiarowego)
+startMinPacFrac		=1.0007;	//wartosc pacFrac, (startowe V przy growing=1)
+startMaxPacFrac		=1.000;	//wartosc pacFrac, (startowe V przy growing=0)
+minArg			=100.69;	//najmniejsze badane cisnienie (startArg przy growing=1)
+maxArg			=0.000;	//najwieksze badane cisnienie (startArg przy growing=0)
+multiplyArgument	=1;		//0-argument dodawany (interwaly), 1-argument mnozony (czynnik ponizej)
+multiplyFactor		=100;	//gdy multiplyArgument=1, factor zwiekszania argumentu (>1) 1.01010101010101
+intervalMin[0]		=0.0000;	//skoki iteracji dla przedzialow cisnienia (poczatkowy i koncowy musza wykraczac poza minArg i maxArg)
+intervalMax[0]		=10.0000;
+intervalDelta[0]	=0.2600;
+intervalMin[1]		=10.0000;
+intervalMax[1]		=30.0000;
+intervalDelta[1]	=5.0000;
+intervalMin[2]		=30.0000;
+intervalMax[2]		=90.0000;
+intervalDelta[2]	=15.0000;
+intervalMin[3]		=90.00000;
+intervalMax[3]		=500.0000;
+intervalDelta[3]	=50.0000;
+intervalMin[4]		=0.0000;
+intervalMax[4]		=0.0000;
+intervalDelta[4]	=0.0000;
+intervalMin[5]		=0.0000;
+intervalMax[5]		=0.0000;
+intervalDelta[5]	=0.0000;
+intervalMin[6]		=0.0000;
+intervalMax[6]		=0.0000;
+intervalDelta[6]	=0.0000;
+intervalMin[7]		=0.0000;
+intervalMax[7]		=0.0000;
+intervalDelta[7]	=0.0000;
+intervalMin[8]		=0.0000;
+intervalMax[8]		=0.0000;
+intervalDelta[8]	=0.0000;
+intervalMin[9]		=0.0000;
+intervalMax[9]		=0.0000;
+intervalDelta[9]	=0.0000;

@@ -1,0 +1,33 @@
+#!/bin/bash
+#SBATCH --job-name=HCHRecSNTMP
+#SBATCH -p quick
+#SBATCH --time=0-00:05:00
+#SBATCH --mem-per-cpu=100M
+#SBATCH --no-requeue
+#SBATCH --output=output/OUT_HCH3120_100_%j.txt
+#SBATCH --error=output/ERR_HCH3120_100_%j.txt
+
+#$1-N, $2-gaps, $3-deltaDiameter, $4-initMode, $5-growing, $6-iterationsNumber, $7-useSpecificDirectory (UWAGA: NIE 0), $8-MAX(+1)PointNumber(from 0), $9-pointNumber(from 0), $10-filterText, $11-generatorStartPoint, $12-jobID, $13-alpha, $14-beta
+
+
+#UWAGA #1: SLURM nie tworzy indywidualnego folderu dla kazdego zadania (ponizej tworzony jest recznie)
+mkdir $TMPDIR/lustre/mb1991/tmp_mb1991_$SLURM_JOB_ID
+cd $TMPDIR/lustre/mb1991/tmp_mb1991_$SLURM_JOB_ID
+pwd
+echo "==============================="
+
+cp $SLURM_SUBMIT_DIR/program .
+cp $SLURM_SUBMIT_DIR/config.txt .
+cp $SLURM_SUBMIT_DIR/startArguments.txt .
+echo "files copied"
+
+#UWAGA #2: Mozna do programu zadac jobID rowny np. 'repeats left' (lub 'none' gdy to zwykla rekurencja [a nie onePoint]). Wtedy w przypadku ewentualnej reanimacji powinno byc latwiej (bo: komenda 'sacct' [i podobne], czy nawet zapis w ERR [jezeli akurat powstanie - na co liczyc nie mozna] da co prawda informacje o jobID nieudanego jobu, jednak NIE DA informacji o jobID jobu 'poprzedniego' [z ktorego on korzystal i ktorego znajomosc potrzebna jest do reanimacji]) - nie bedzie trzeba go szukac po folderach indywidualnie dla kazdego reanimowanego jobu.
+time srun ./program 2 ${12} $1 $2 $3 $4 $5 $6 $7 0 $9 ${11} ${13} ${14}
+
+cp -fr 3D_N-$1_gaps-$2_G-$5_badanie-$7_D-$3_inM-$4_a-${13}_b-${14} $SLURM_SUBMIT_DIR
+#UWAGA #3: SLURM nie kasuje po sobie tempa automatycznie
+rm -r $TMPDIR/lustre/mb1991/tmp_mb1991_$SLURM_JOB_ID
+
+cd $SLURM_SUBMIT_DIR
+sbatch --job-name=${10}G$5B$7P$(($9 + $6)) --output=output/OUT_BDS$1_gaps-$2_D-$3_inM-$4_G-$5_B-$7_P-$(($9 + $6))_a-${13}_b-${14}_%j.txt --error=output/ERR_BDS$1_gaps-$2_D-$3_inM-$4_G-$5_B-$7_P-$(($9 + $6))_a-${13}_b-${14}_%j.txt sbatchTMPRecursion ${12} $1 $2 $3 $4 $5 $(($9 + $6 - 1)) $6 $7 $8 ${10} ${13} ${14};
+exit 0

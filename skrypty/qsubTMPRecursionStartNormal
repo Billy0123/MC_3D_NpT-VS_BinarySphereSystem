@@ -1,0 +1,30 @@
+#!/bin/bash
+#PBS -N HCHRecSNTMP
+#PBS -q standard
+#PBS -r n
+#PBS -l walltime=0:5:0
+#PBS -o output/OUT_BDS${VAR1}_gaps-${VAR2}_D-${VAR3}_inM-${VAR4}_G-${VAR5}_B-${VAR7}_P-${VAR9}_a-${VAR12}_b-${VAR13}_${PBS_JOBID}.txt
+#PBS -e output/ERR_BDS${VAR1}_gaps-${VAR2}_D-${VAR3}_inM-${VAR4}_G-${VAR5}_B-${VAR7}_P-${VAR9}_a-${VAR12}_b-${VAR13}_${PBS_JOBID}.txt
+
+#$VAR1-N, $VAR2-gaps, $VAR3-deltaDiameter, $VAR4-initMode, $VAR5-growing, $VAR6-iterationsNumber, $VAR7-useSpecificDirectory (UWAGA: NIE 0), $VAR8-MAX(+1)PointNumber(from 0), $VAR9-pointNumber(from 0), $filterText-filterText, $VAR10-generatorStartPoint, $VAR11-jobID, $VAR12-alpha, $VAR13-beta
+
+
+#UWAGA #1: PBS tworzy indywidualny folder tmp dla kazdego zadania
+cd $TMPDIR
+pwd
+echo "==============================="
+
+cp $PBS_O_WORKDIR/program .
+cp $PBS_O_WORKDIR/config.txt .
+cp $PBS_O_WORKDIR/startArguments.txt .
+echo "files copied"
+
+#UWAGA #2: Mozna do programu zadac jobID rowny np. 'repeats left' (lub 'none' gdy to zwykla rekurencja [a nie onePoint]). Wtedy w przypadku ewentualnej reanimacji powinno byc latwiej (bo: komenda 'sacct' [i podobne], czy nawet zapis w ERR [jezeli akurat powstanie - na co liczyc nie mozna] da co prawda informacje o jobID nieudanego jobu, jednak NIE DA informacji o jobID jobu 'poprzedniego' [z ktorego on korzystal i ktorego znajomosc potrzebna jest do reanimacji]) - nie bedzie trzeba go szukac po folderach indywidualnie dla kazdego reanimowanego jobu.
+time ./program 2 $VAR11 $VAR1 $VAR2 $VAR3 $VAR4 $VAR5 $VAR6 $VAR7 0 $VAR9 $VAR10 ${VAR12} ${VAR13}
+
+cp -fr 3D_N-${VAR1}_gaps-${VAR2}_G-${VAR5}_badanie-${VAR7}_D-${VAR3}_inM-${VAR4}_a-${VAR12}_b-${VAR13} $PBS_O_WORKDIR
+#UWAGA #3: PBS kasuje po sobie tempa automatycznie
+
+ssh ce.reef.man.poznan.pl "cd $PBS_O_WORKDIR; qsub -N ${filterText}G${VAR5}B${VAR7}P$(($VAR9 + $VAR6)) -o output/OUT_BDS${VAR1}_gaps-${VAR2}_D-${VAR3}_inM-${VAR4}_G-${VAR5}_B-${VAR7}_P-$(($VAR9 + $VAR6))_a-${VAR12}_b-${VAR13}_prevJobID-${PBS_JOBID}.txt -e output/ERR_BDS${VAR1}_gaps-${VAR2}_D-${VAR3}_inM-${VAR4}_G-${VAR5}_B-${VAR7}_P-$(($VAR9 + $VAR6))_a-${VAR12}_b-${VAR13}_prevJobID-${PBS_JOBID}.txt -v VAR1=$VAR11,VAR2=$VAR1,VAR3=$VAR2,VAR4=$VAR3,VAR5=$VAR4,VAR6=$VAR5,VAR7=$(($VAR9 + $VAR6 - 1)),VAR8=$VAR6,VAR9=$VAR7,VAR10=$VAR8,filterText=${filterText},VAR11=${VAR12},VAR12=${VAR13} qsubTMPRecursion";
+#ui.inula.man.poznan.pl
+exit 0

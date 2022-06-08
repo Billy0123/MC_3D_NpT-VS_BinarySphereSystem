@@ -1,0 +1,49 @@
+#!/bin/bash
+#PBS -N HCHRecOPTMP
+#PBS -q standard
+#PBS -r n
+#PBS -l walltime=0:5:0
+#PBS -o output/OUT_BDS${VAR2}_gaps-${VAR3}_D-${VAR4}_inM-${VAR5}_G-${VAR6}_B-${VAR8}_P-${VAR7}_R-${VAR9}_a-${VAR10}_b-${VAR11}_${PBS_JOBID}.txt
+#PBS -e output/ERR_BDS${VAR2}_gaps-${VAR3}_D-${VAR4}_inM-${VAR5}_G-${VAR6}_B-${VAR8}_P-${VAR7}_R-${VAR9}_a-${VAR10}_b-${VAR11}_${PBS_JOBID}.txt
+
+#UWAGA #1 !!! Pamietac o wyzerowaniu liczby krokow generatora liczb pseudolosowych (by niepotrzebnie nie czekac na to przy kazdym runie -> OPCJA W CONFIGU)
+
+#$VAR1-job_id jobu, ktory zawieral loadowany punkt, $VAR2-N, $VAR3-gaps, $VAR4-deltaDiameter, $VAR5-initMode, $VAR6-growing, $VAR7-pointNumber(from 0), $VAR8-useSpecificDirectory (UWAGA: NIE 0), $VAR9-ile razy powtorzyc wykonanie jobu?, $filterText-filterText, $VAR10-alpha, $VAR11-beta
+
+
+cd $PBS_O_WORKDIR
+#pressure do 3 miejsc po przecinku (zeby pasowalo do nazw plikow, lista DOMYSLNIE na G=1)
+listLength=$(wc -l startArguments.txt | cut -f1 -d' ');
+if [ ${VAR6} = 1 ]; then
+   PRESSURE=$(cut -f2 startArguments.txt | head -n $((${VAR7} + 1)) | tail -1);
+else
+   PRESSURE=$(cut -f2 startArguments.txt | head -n $((${listLength} - ${VAR7})) | tail -1);
+fi
+
+#UWAGA #2: PBS tworzy indywidualny folder tmp dla kazdego zadania
+cd $TMPDIR
+pwd
+echo "==============================="
+
+cp $PBS_O_WORKDIR/program .
+cp $PBS_O_WORKDIR/config.txt .
+cp $PBS_O_WORKDIR/startArguments.txt .
+echo "files copied"
+mkdir 3D_N-${VAR2}_gaps-${VAR3}_G-${VAR6}_badanie-${VAR8}_D-${VAR4}_inM-${VAR5}_a-${VAR10}_b-${VAR11}
+cp $PBS_O_WORKDIR/3D_N-${VAR2}_gaps-${VAR3}_G-${VAR6}_badanie-${VAR8}_D-${VAR4}_inM-${VAR5}_a-${VAR10}_b-${VAR11}/j-${VAR1}_Configurations_arg-${PRESSURE}.txt 3D_N-${VAR2}_gaps-${VAR3}_G-${VAR6}_badanie-${VAR8}_D-${VAR4}_inM-${VAR5}_a-${VAR10}_b-${VAR11} && {
+
+   #UWAGA #3: Mozna do programu zadac jobID rowny np. 'repeats left' (lub 'none' gdy to zwykla rekurencja [a nie onePoint]). Wtedy w przypadku ewentualnej reanimacji powinno byc latwiej (bo: komenda 'sacct' [i podobne], czy nawet zapis w ERR [jezeli akurat powstanie - na co liczyc nie mozna] da co prawda informacje o jobID nieudanego jobu, jednak NIE DA informacji o jobID jobu 'poprzedniego' [z ktorego on korzystal i ktorego znajomosc potrzebna jest do reanimacji]) - nie bedzie trzeba go szukac po folderach indywidualnie dla kazdego reanimowanego jobu.
+   time ./program 4 $PBS_JOBID $VAR1 $VAR2 $VAR3 $VAR4 $VAR5 $VAR6 $VAR7 1 $VAR8 0 ${VAR10} ${VAR11}
+
+   cp -fr 3D_N-${VAR2}_gaps-${VAR3}_G-${VAR6}_badanie-${VAR8}_D-${VAR4}_inM-${VAR5}_a-${VAR10}_b-${VAR11} $PBS_O_WORKDIR
+   #UWAGA #4: PBS kasuje po sobie tempa automatycznie
+
+   if [ $(($VAR9 - 1)) -gt 0 ]; then 
+   ssh ce.reef.man.poznan.pl "cd $PBS_O_WORKDIR; qsub -N ${filterText}G${VAR6}B${VAR8}P${VAR7}R$(($VAR9 - 1)) -v VAR1=$PBS_JOBID,VAR2=$VAR2,VAR3=$VAR3,VAR4=$VAR4,VAR5=$VAR5,VAR6=$VAR6,VAR7=$VAR7,VAR8=$VAR8,VAR9=$(($VAR9 - 1)),filterText=${filterText},VAR10=${VAR10},VAR11=${VAR11} qsubTMPRecursionOnePoint";
+   #ui.inula.man.poznan.pl
+   fi
+} || {
+   echo "Missing configuration file (previous job failed) or actual job failed at any step. Stopping recursion.";
+}
+
+exit 0
